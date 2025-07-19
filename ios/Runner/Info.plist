@@ -47,14 +47,18 @@
 	<true/>
 
 	<!-- ✅ 新增的定位權限 -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>我們需要您的位置來顯示地圖與定位</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>我們需要您的位置來顯示地圖與定位</string>
 	<key>NSCameraUsageDescription</key>
 	<string>App需要使用相機來拍攝圖片</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>App需要存取您的相簿來選取圖片</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>App需要將圖片儲存到您的相簿</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>我們需要您的位置來顯示地圖與定位</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>我們需要您的位置來顯示地圖與定位</string>
+
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 
