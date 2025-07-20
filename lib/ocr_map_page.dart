@@ -24,8 +24,8 @@ class _OcrMapPageState extends State<OcrMapPage> {
   String? _address;
 
   final String ocrApiUrl = 'http://192.168.0.17:5000/ocr';
-  final String sheetPostUrl = 'https://script.google.com/macros/s/AKfycbxhx4gMbE5TUdbTO1XVd7EDq5Rn7RTgQCb-i7Of7Lh0mQRmH5qgffeudPlq8FFXBKir/exec';
-  final String sheetJsonUrl = 'https://opensheet.vercel.app/1oS_XPHSBBTsWyfdOTj6j_8w_vM_AZumFbzTHLo9Fnqk/Sheet1';
+  final String sheetPostUrl = 'https://script.google.com/macros/s/AKfycbzd9Fmk1vgFj0dcuh70HC5oi8kPxNVo3RO4n6Y2O2pagD9gBCtCNHTUU9FHhLxsH-xS/exec';
+  final String sheetJsonUrl = 'https://opensheet.elk.sh/1oS_XPHSBBTsWyfdOTj6j_8w_vM_AZumFbzTHLo9Fnqk/Sheet1';
   Future<void> _pickAndSendImage() async {
     try {
       final ImagePicker picker = ImagePicker();
@@ -80,44 +80,60 @@ class _OcrMapPageState extends State<OcrMapPage> {
   Future<void> _loadMarkers() async {
     try {
       final response = await http.get(Uri.parse(sheetJsonUrl));
-      final List data = json.decode(response.body);
+      debugPrint("📄 Raw JSON: ${utf8.decode(response.bodyBytes)}");
 
+      final List data = json.decode(utf8.decode(response.bodyBytes));
       Set<Marker> markers = {};
+
       for (var item in data) {
-        final name = item['name'] ?? item['店名'];
-        final address = item['address'] ?? item['地址'];
-        print('📄 從表單取得: name=$name, address=$address');
+        final name = item['name'];
+        final address = item['address'];
+        final time = item['time'] ?? ''; // ✅ 加入時間欄位
+
         if (name != null && address != null && address.toString().isNotEmpty) {
           try {
             List<Location> locations = await locationFromAddress(address);
             if (locations.isNotEmpty) {
               final loc = locations.first;
-              print('✅ 加入 marker: $name at ${loc.latitude}, ${loc.longitude}');
               markers.add(Marker(
                 markerId: MarkerId(name),
                 position: LatLng(loc.latitude, loc.longitude),
                 infoWindow: InfoWindow(
                   title: name,
-                  snippet: address,
+                  snippet: '$address\n🕒 $time', // ✅ 顯示時間
                   onTap: () => _openGoogleMapsNavigation(loc.latitude, loc.longitude),
                 ),
               ));
             } else {
-              print('⚠️ 找不到地點: $address');
+              debugPrint('⚠️ Geocoding 找不到: $address');
             }
           } catch (e) {
-            print('❌ Geocoding 失敗: $e');
+            debugPrint('❌ Geocoding 失敗: $address, error=${e.toString()}');
           }
         }
+      }
+
+      if (markers.isEmpty) {
+        markers.add(Marker(
+          markerId: MarkerId('debug'),
+          position: LatLng(25.034, 121.5645),
+          infoWindow: InfoWindow(title: 'Debug Marker'),
+        ));
       }
 
       setState(() {
         _markers = markers;
       });
+
+      debugPrint('✅ Marker 數量: ${_markers.length}');
     } catch (e) {
-      print('❌ 無法載入地標: $e');
+      debugPrint('❌ 無法載入地標: ${e.toString()}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('載入地標失敗：${e.toString()}')),
+      );
     }
   }
+
   Future<void> _moveToCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
