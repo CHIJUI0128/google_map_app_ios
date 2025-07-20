@@ -25,8 +25,7 @@ class _OcrMapPageState extends State<OcrMapPage> {
 
   final String ocrApiUrl = 'http://192.168.0.17:5000/ocr';
   final String sheetPostUrl = 'https://script.google.com/macros/s/AKfycbykOzQGXo5tFGrAZLU7ahwd0q2f59NtcaHZdxPWbKViK4J0zOGK1-Tg7dX-q0TUggtl/exec';
-  final String sheetJsonUrl = 'https://opensheet.vercel.app/1oS_XPHSBBTsWyfdOTj6j_8w_vM_AZumFbzTHLo9Fnqk/%E5%B7%A5%E4%BD%9C%E8%A1%A81';
-
+  final String sheetJsonUrl = 'https://opensheet.vercel.app/1oS_XPHSBBTsWyfdOTj6j_8w_vM_AZumFbzTHLo9Fnqk/Sheet1';
   Future<void> _pickAndSendImage() async {
     try {
       final ImagePicker picker = ImagePicker();
