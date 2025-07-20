@@ -33,8 +33,7 @@ dependencies:
   google_maps_flutter: ^2.5.0
   geolocator: ^11.0.0
   permission_handler: ^11.3.0
-
-  image_picker: ^0.8.7+4            # 選圖／拍照
+  image_picker: ^1.1.2
   http: ^0.13.5                    # HTTP 請求
   geocoding: ^2.0.5                # 地址轉經緯度
   url_launcher: ^6.1.7             # 開啟外部網址（導航）

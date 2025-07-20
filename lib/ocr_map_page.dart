@@ -28,57 +28,52 @@ class _OcrMapPageState extends State<OcrMapPage> {
   final String sheetJsonUrl = 'https://opensheet.vercel.app/1oS_XPHSBBTsWyfdOTj6j_8w_vM_AZumFbzTHLo9Fnqk/%E5%B7%A5%E4%BD%9C%E8%A1%A81';
 
   Future<void> _pickAndSendImage() async {
-    final status = await Permission.photos.request();
+    try {
+      final ImagePicker picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-    if (status.isDenied || status.isPermanentlyDenied) {
-      // 如果使用者拒絕了權限，提示並引導前往設定頁
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('需要照片權限才能選取圖片，請前往設定中開啟'),
-          action: SnackBarAction(
-            label: '開啟設定',
-            onPressed: () {
-              openAppSettings();
-            },
-          ),
-        ),
-      );
-      return;
-    }
+      if (pickedFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('尚未選擇圖片')),
+        );
+        return;
+      }
 
-    // ✅ 如果權限允許，開始挑選圖片
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
-
-    setState(() {
-      _imageFile = File(pickedFile.path);
-      _name = null;
-      _address = null;
-    });
-
-    // 🔁 傳送圖片到 API 處理
-    var request = http.MultipartRequest('POST', Uri.parse(ocrApiUrl));
-    request.files.add(await http.MultipartFile.fromPath('image', pickedFile.path));
-    var response = await request.send();
-
-    if (response.statusCode == 200) {
-      var responseData = await response.stream.bytesToString();
-      var data = json.decode(responseData);
       setState(() {
-        _name = data['name'];
-        _address = data['address'];
+        _imageFile = File(pickedFile.path);
+        _name = null;
+        _address = null;
       });
 
-      // 📝 上傳到 Google Sheet
-      final sheetRes = await http.get(Uri.parse('$sheetPostUrl?name=$_name&address=$_address'));
-      print('✅ Sheet 回傳: ${sheetRes.statusCode} ${sheetRes.body}');
+      // 傳送圖片到 OCR API
+      var request = http.MultipartRequest('POST', Uri.parse(ocrApiUrl));
+      request.files.add(await http.MultipartFile.fromPath('image', pickedFile.path));
+      var response = await request.send();
 
-      // ⏳ 稍等一下再重新讀取地圖標記
-      await Future.delayed(Duration(seconds: 2));
-      _loadMarkers();
-    } else {
+      if (response.statusCode == 200) {
+        var responseData = await response.stream.bytesToString();
+        var data = json.decode(responseData);
+        setState(() {
+          _name = data['name'];
+          _address = data['address'];
+        });
+
+        // 上傳到 Google Sheet
+        final sheetRes = await http.get(Uri.parse('$sheetPostUrl?name=$_name&address=$_address'));
+        print('✅ Sheet 回傳: ${sheetRes.statusCode} ${sheetRes.body}');
+
+        // 重新載入地圖標記
+        await Future.delayed(Duration(seconds: 2));
+        _loadMarkers();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('辨識失敗：${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      print('❌ 發生錯誤: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('辨識失敗：${response.statusCode}')),
+        SnackBar(content: Text('發生錯誤：$e')),
       );
     }
   }
