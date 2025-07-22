@@ -23,7 +23,7 @@ class _OcrMapPageState extends State<OcrMapPage> {
   String? _name;
   String? _address;
 
-  final String ocrApiUrl = 'http://192.168.0.17:5000/ocr';
+  final String ocrApiUrl = 'https://ocr-llm-server.onrender.com/ocr';
   final String sheetPostUrl = 'https://script.google.com/macros/s/AKfycbzd9Fmk1vgFj0dcuh70HC5oi8kPxNVo3RO4n6Y2O2pagD9gBCtCNHTUU9FHhLxsH-xS/exec';
   final String sheetJsonUrl = 'https://opensheet.elk.sh/1oS_XPHSBBTsWyfdOTj6j_8w_vM_AZumFbzTHLo9Fnqk/Sheet1';
   Future<void> _pickAndSendImage() async {
@@ -50,12 +50,27 @@ class _OcrMapPageState extends State<OcrMapPage> {
       var response = await request.send();
 
       if (response.statusCode == 200) {
+        // var responseData = await response.stream.bytesToString();
+        // var data = json.decode(responseData);
+        // setState(() {
+        //   _name = data['name'];
+        //   _address = data['address'];
+        // });
+
         var responseData = await response.stream.bytesToString();
+        print('🔍 OCR 回傳 JSON 字串: $responseData');
+
         var data = json.decode(responseData);
+        print('🔍 解析後 JSON Map: $data');
+
         setState(() {
           _name = data['name'];
           _address = data['address'];
         });
+
+        print('🔍 設定後 name: $_name');
+        print('🔍 設定後 address: $_address');
+
 
         // 上傳到 Google Sheet
         final sheetRes = await http.get(Uri.parse('$sheetPostUrl?name=$_name&address=$_address'));
@@ -199,3 +214,4 @@ class _OcrMapPageState extends State<OcrMapPage> {
     );
   }
 }
+
